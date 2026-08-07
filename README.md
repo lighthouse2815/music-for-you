@@ -42,22 +42,18 @@ audio: "assets/audio/ten-bai-hat.mp3"
 
 Xem thêm trong [assets/audio/README.md](./assets/audio/README.md).
 
-## Deploy Cloudflare Pages
-
-Lệnh dưới đây tạo `dist/` chỉ gồm các file cần public và deploy lên project Cloudflare Pages hiện tại:
-
-```powershell
-npm run deploy
-```
-
 ## Deploy tự động từ nhánh `main`
 
-Workflow [deploy-cloudflare-pages.yml](./.github/workflows/deploy-cloudflare-pages.yml) đã chạy mỗi khi có push vào `main`. Để kích hoạt workflow trên GitHub, vào **Settings → Secrets and variables → Actions** của repository và thêm một repository secret:
+Cloudflare Pages được kết nối trực tiếp với repository GitHub này. Không cần Cloudflare API token, GitHub Actions hay lệnh deploy thủ công.
 
-| Secret | Giá trị |
+Thiết lập trên Cloudflare Pages:
+
+| Mục | Giá trị |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token có quyền **Cloudflare Pages: Edit** cho tài khoản đang chứa project. |
+| Git provider | GitHub |
+| Repository | `lighthouse2815/music-for-you` |
+| Production branch | `main` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
 
-Sau đó mọi lần push vào `main` sẽ tự build và deploy production lên `https://music-for-you.pages.dev/`.
-
-> Project Pages hiện tại được tạo theo kiểu Direct Upload. Workflow dùng Wrangler để giữ nguyên URL hiện có, thay vì phải tạo một Pages project Git integration mới.
+Sau khi kết nối, mọi lần push vào `main` sẽ tự build và deploy production. Pull request hoặc branch khác có thể tạo preview deployment nếu được bật trong Cloudflare.
