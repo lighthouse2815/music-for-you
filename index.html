@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta id="theme-color-meta" name="theme-color" content="#f2f7f0" />
+    <meta name="theme-color" content="#050812" />
     <link rel="icon" type="image/png" href="assets/brand/am-luu-logo.png" />
     <title>Âm Lưu — Nghe theo cách của bạn</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css?v=logo-toolbar-1" />
   </head>
-  <body>
+  <body class="app-dark">
     <div class="grain" aria-hidden="true"></div>
     <main class="app-shell">
       <aside class="sidebar">
@@ -49,7 +49,8 @@
           <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Mở menu">☰</button>
             <a class="topbar-brand" href="#home" data-page="home" aria-label="Âm Lưu trang chủ">
               <span class="brand-logo-frame brand-logo-frame--topbar"><img src="assets/brand/am-luu-logo.png" alt="Logo Âm Lưu" /></span>
-              <span class="topbar-brand-copy"><strong>Âm Lưu</strong><small>music library</small></span>
+              <span class="topbar-brand-copy"><small class="topbar-greeting">Xin chào,</small><strong>Âm Lưu</strong><small class="topbar-library-label">music library</small></span>
+              <span class="topbar-premium" aria-hidden="true">● PREMIUM</span>
             </a>
           </div>
           <label class="search-box" for="search-input">
@@ -57,10 +58,7 @@
             <input id="search-input" type="search" placeholder="Tìm bài hát, nghệ sĩ..." autocomplete="off" />
             <kbd>ESC</kbd>
           </label>
-          <div class="topbar-actions">
-            <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Bật chế độ tối" aria-pressed="false" title="Bật chế độ tối">☾</button>
-            <div class="now-chip"><span class="pulse"></span>Nhạc của bạn, ở ngay đây</div>
-          </div>
+          <div class="topbar-actions"><div class="now-chip"><span class="pulse"></span>Nhạc của bạn, ở ngay đây</div></div>
         </header>
 
         <div id="home-page" class="page active-page">
@@ -83,7 +81,7 @@
           </section>
 
           <section class="section-block">
-            <div class="section-heading"><div><p class="eyebrow">THƯ VIỆN NỘI BỘ</p><h2>Nhạc theo thể loại</h2></div><span id="track-count" class="count-label"></span></div>
+            <div class="section-heading"><div><p class="eyebrow">THƯ VIỆN NỘI BỘ</p><h2>Bài hát của bạn</h2></div><span id="track-count" class="count-label"></span></div>
             <div id="featured-tracks" class="genre-groups"></div>
           </section>
         </div>
@@ -91,7 +89,7 @@
         <div id="library-page" class="page">
           <section class="inner-page-heading">
             <p class="eyebrow">TOÀN BỘ THƯ VIỆN</p>
-            <h1>Nhạc theo thể loại</h1>
+            <h1>Thư viện âm nhạc</h1>
             <p>Mỗi thể loại được hiển thị riêng để bài hát không bị trộn lẫn.</p>
           </section>
           <div id="library-tracks" class="genre-groups full-track-list"></div>
@@ -108,19 +106,28 @@
 
         <div id="player-page" class="page player-page">
           <section class="now-playing-stage">
-            <div class="now-playing-topline"><p id="page-player-status" class="eyebrow">SẴN SÀNG PHÁT</p><button class="text-button" type="button" data-page="library">Quay lại thư viện <span>↗</span></button></div>
-            <div class="turntable-scene" aria-label="Đĩa nhạc đang phát">
+            <section class="turntable-scene" aria-label="Đĩa nhạc đang phát">
+              <div class="cover-ambient" aria-hidden="true"></div>
+              <p id="page-player-status" class="scene-status eyebrow">SẴN SÀNG PHÁT</p>
+              <div class="turntable-stamp" aria-hidden="true"><span id="page-player-genre">THƯ VIỆN</span><strong id="page-player-index">01</strong></div>
+              <p class="turntable-note" aria-hidden="true"><span></span>cover reactive</p>
+              <div class="music-notes" aria-hidden="true"><span class="music-note note-one">♪</span><span class="music-note note-two">♫</span><span class="music-note note-three">♩</span><span class="music-note note-four">♬</span></div>
               <div class="vinyl-record" aria-hidden="true"><div class="vinyl-label"><img id="page-player-cover" src="" alt="" /></div></div>
               <div class="turntable-arm" aria-hidden="true"><span></span></div>
-            </div>
-            <div class="now-playing-copy">
+              <div class="vinyl-mode" aria-hidden="true"><span>▥</span><div><strong>VINYL MODE</strong><small>Âm thanh của khoảnh khắc</small></div></div>
+            </section>
+            <section class="now-playing-copy">
+              <div class="player-copy-top"><button class="text-button player-back-button" type="button" data-page="library">Quay lại thư viện <span>‹</span></button><button id="page-like-button" class="page-utility-button page-like-button" type="button" aria-label="Yêu thích bài hát">♡</button></div>
               <p class="eyebrow">ĐANG PHÁT</p>
               <h1 id="page-player-title">Chọn một bài hát</h1>
               <p id="page-player-artist" class="now-playing-artist">Thư viện Âm Lưu</p>
               <p id="page-player-album" class="now-playing-album"></p>
-              <div class="audio-visualizer" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-              <div class="page-player-controls"><button id="page-previous-button" class="icon-button" type="button" aria-label="Bài trước">◀◀</button><button id="page-play-button" class="play-button" type="button" aria-label="Phát">▶</button><button id="page-next-button" class="icon-button" type="button" aria-label="Bài tiếp">▶▶</button></div>
-            </div>
+              <div class="player-page-meta" aria-label="Thông tin bài hát"><span id="page-player-tag">SẴN SÀNG</span><span aria-hidden="true">•</span><span id="page-player-position">01 / 01</span></div>
+              <div id="audio-visualizer" class="audio-visualizer" aria-label="Phổ âm thanh phản ứng theo nhạc"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="page-progress-wrap"><div class="page-progress-times"><time id="page-elapsed-time">0:00</time><time id="page-duration-time">0:00</time></div><input id="page-progress-input" type="range" min="0" max="100" value="0" aria-label="Tiến độ bài hát trên trang đang phát" /></div>
+              <div class="page-player-controls"><button id="page-shuffle-button" class="page-utility-button" type="button" aria-label="Phát ngẫu nhiên">⤨</button><button id="page-previous-button" class="icon-button" type="button" aria-label="Bài trước">◀◀</button><button id="page-play-button" class="play-button" type="button" aria-label="Phát">▶</button><button id="page-next-button" class="icon-button" type="button" aria-label="Bài tiếp">▶▶</button><button id="page-repeat-button" class="page-utility-button" type="button" aria-label="Lặp lại bài hát">↻</button></div>
+              <div class="player-quote" aria-label="Thông tin bài hát"><span>♫</span><p id="page-player-quote">Âm nhạc của bạn, ở ngay đây.</p><i aria-hidden="true">⌁⌁⌁</i></div>
+            </section>
           </section>
         </div>
       </section>

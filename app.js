@@ -416,7 +416,10 @@ const $ = (selector, parent = document) => parent.querySelector(selector);
 const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
 const audio = $("#audio-player");
 const storeKey = "am-luu-v1";
-const themeKey = "am-luu-theme";
+let audioContext;
+let audioAnalyser;
+let audioFrequencyData;
+let visualizerFrame;
 
 function loadState() {
   try {
@@ -445,25 +448,80 @@ function getTrack(id) { return tracks.find(track => track.id === id); }
 function displayName() { return state.profile; }
 function formatTime(value) { if (!Number.isFinite(value)) return "0:00"; const minutes = Math.floor(value / 60); const seconds = Math.floor(value % 60).toString().padStart(2, "0"); return `${minutes}:${seconds}`; }
 
+function resetAudioVisualizer() {
+  if (visualizerFrame) cancelAnimationFrame(visualizerFrame);
+  visualizerFrame = null;
+  const visualizer = $("#audio-visualizer");
+  visualizer.classList.remove("is-active");
+  $$("span", visualizer).forEach((bar, index) => {
+    bar.style.setProperty("--level", index % 3 === 1 ? ".13" : ".18");
+    bar.style.setProperty("--bar-opacity", ".32");
+  });
+  const playerPage = $("#player-page");
+  playerPage.style.setProperty("--music-note-opacity", ".16");
+  playerPage.style.setProperty("--music-note-scale", ".88");
+  playerPage.style.setProperty("--music-note-glow", "9px");
+  playerPage.style.setProperty("--record-glow", "0px");
+}
+
+function prepareAudioVisualizer() {
+  if (audioAnalyser) {
+    if (audioContext?.state === "suspended") audioContext.resume().catch(() => {});
+    return true;
+  }
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return false;
+  try {
+    audioContext = new AudioContextClass();
+    const source = audioContext.createMediaElementSource(audio);
+    audioAnalyser = audioContext.createAnalyser();
+    audioAnalyser.fftSize = 128;
+    audioAnalyser.smoothingTimeConstant = .82;
+    source.connect(audioAnalyser);
+    audioAnalyser.connect(audioContext.destination);
+    audioFrequencyData = new Uint8Array(audioAnalyser.frequencyBinCount);
+    $("#audio-visualizer").classList.add("is-live");
+    audioContext.resume().catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function startAudioVisualizer() {
+  if (!prepareAudioVisualizer()) return;
+  if (visualizerFrame) cancelAnimationFrame(visualizerFrame);
+  const visualizer = $("#audio-visualizer");
+  const bars = $$("span", visualizer);
+  const playerPage = $("#player-page");
+  visualizer.classList.add("is-active");
+  const paint = () => {
+    if (audio.paused || audio.ended || !audioAnalyser) { resetAudioVisualizer(); return; }
+    audioAnalyser.getByteFrequencyData(audioFrequencyData);
+    const spectrumLength = Math.max(1, Math.floor(audioFrequencyData.length * .72));
+    let totalEnergy = 0;
+    bars.forEach((bar, index) => {
+      const from = Math.floor((index / bars.length) * spectrumLength);
+      const to = Math.max(from + 1, Math.floor(((index + 1) / bars.length) * spectrumLength));
+      let total = 0;
+      for (let position = from; position < to; position += 1) total += audioFrequencyData[position];
+      const energy = Math.pow(total / ((to - from) * 255), .78);
+      totalEnergy += energy;
+      bar.style.setProperty("--level", (0.13 + energy * .87).toFixed(3));
+      bar.style.setProperty("--bar-opacity", (0.34 + energy * .66).toFixed(3));
+    });
+    const averageEnergy = totalEnergy / bars.length;
+    playerPage.style.setProperty("--music-note-opacity", (0.24 + averageEnergy * .68).toFixed(3));
+    playerPage.style.setProperty("--music-note-scale", (0.9 + averageEnergy * .24).toFixed(3));
+    playerPage.style.setProperty("--music-note-glow", `${Math.round(9 + averageEnergy * 25)}px`);
+    playerPage.style.setProperty("--record-glow", `${Math.round(2 + averageEnergy * 16)}px`);
+    visualizerFrame = requestAnimationFrame(paint);
+  };
+  paint();
+}
+
 function showToast(message) { const toast = $("#toast"); toast.textContent = message; toast.classList.add("visible"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("visible"), 2600); }
 function setProfileUi() { const name = displayName(); $("#profile-name").textContent = name; $("#side-profile-name").textContent = name.toUpperCase(); $("#profile-initial").textContent = name.trim().charAt(0).toUpperCase() || "K"; }
-function applyTheme(theme) {
-  const isDark = theme === "dark";
-  const button = $("#theme-toggle");
-  const themeColor = $("#theme-color-meta");
-  document.documentElement.dataset.theme = isDark ? "dark" : "light";
-  themeColor.content = isDark ? "#161715" : "#f2f7f0";
-  button.textContent = isDark ? "☀" : "☾";
-  button.setAttribute("aria-label", isDark ? "Bật chế độ sáng" : "Bật chế độ tối");
-  button.setAttribute("aria-pressed", String(isDark));
-  button.title = isDark ? "Bật chế độ sáng" : "Bật chế độ tối";
-}
-function loadTheme() { applyTheme(localStorage.getItem(themeKey) === "dark" ? "dark" : "light"); }
-function toggleTheme() {
-  const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  localStorage.setItem(themeKey, theme);
-  applyTheme(theme);
-}
 
 function coverMarkup(track, fallback) { return track.cover ? `<img src="${track.cover}" alt="Bìa album của ${track.title}" />` : fallback; }
 function trackRow(track, index, options = {}) {
@@ -502,6 +560,11 @@ function renderSidebar() {
   $$('[data-open-playlist]').forEach(button => button.addEventListener("click", () => openPlaylist(button.dataset.openPlaylist)));
 }
 function renderPlaylists() {
+  if (!state.playlists.length) {
+    $("#playlist-grid").innerHTML = `<section class="playlist-empty"><div class="playlist-empty-art" aria-hidden="true"><span>♫</span></div><p class="eyebrow">GÓC NGHE CỦA BẠN</p><h2>Bạn chưa có playlist nào</h2><p>Tạo playlist đầu tiên để lưu những bài hát bạn yêu thích và nghe theo cách của riêng bạn.</p><button class="primary-button" type="button" data-new-playlist><span>＋</span> Tạo playlist mới</button></section>`;
+    $$('[data-new-playlist]').forEach(button => button.addEventListener("click", openPlaylistDialog));
+    return;
+  }
   const cards = state.playlists.map((playlist, index) => {
     const colors = ["#e36a3b", "#86a68f", "#b18cce", "#4e86a9", "#c5955d"];
     const count = playlist.trackIds.length;
@@ -526,17 +589,36 @@ function renderPlaylistDetail() {
 }
 function renderAll() { renderTracks(); renderSidebar(); renderPlaylists(); renderPlaylistDetail(); setProfileUi(); updatePlayerUi(); }
 
+function syncProgressUi() {
+  const progress = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  $("#elapsed-time").textContent = formatTime(audio.currentTime);
+  $("#duration-time").textContent = formatTime(audio.duration);
+  $("#progress-input").value = progress;
+  $("#page-elapsed-time").textContent = formatTime(audio.currentTime);
+  $("#page-duration-time").textContent = formatTime(audio.duration);
+  $("#page-progress-input").value = progress;
+}
+
 function updatePlayerUi() {
   const track = getTrack(state.currentId);
   const pageTrack = track || tracks[0];
+  const pageTrackIndex = Math.max(0, tracks.findIndex(item => item.id === pageTrack?.id));
+  const pageGenre = genres.find(genre => genre.id === pageTrack?.genre)?.label || pageTrack?.tag || "Thư viện";
   $("#play-button").textContent = state.isPlaying ? "Ⅱ" : "▶";
   $("#play-button").setAttribute("aria-label", state.isPlaying ? "Tạm dừng" : "Phát");
   $("#page-play-button").textContent = state.isPlaying ? "Ⅱ" : "▶";
   $("#page-play-button").setAttribute("aria-label", state.isPlaying ? "Tạm dừng" : "Phát");
   $("#shuffle-button").classList.toggle("active", state.shuffle);
   $("#repeat-button").classList.toggle("active", state.repeat);
+  $("#page-shuffle-button").classList.toggle("active", state.shuffle);
+  $("#page-repeat-button").classList.toggle("active", state.repeat);
   $("#like-button").classList.toggle("liked", !!track && state.likes.has(track.id));
   $("#like-button").textContent = track && state.likes.has(track.id) ? "♥" : "♡";
+  const pageLike = $("#page-like-button");
+  const isLiked = !!track && state.likes.has(track.id);
+  pageLike.classList.toggle("liked", isLiked);
+  pageLike.textContent = isLiked ? "♥" : "♡";
+  pageLike.setAttribute("aria-pressed", String(isLiked));
   if (track) { $("#player-title").textContent = track.title; $("#player-artist").textContent = track.artist; const cover = $("#player-cover"); cover.className = `mini-cover ${track.color}${track.cover ? " has-cover" : ""}`; cover.innerHTML = coverMarkup(track, track.title.slice(0, 2).toUpperCase()); }
   if (pageTrack) {
     $("#page-player-title").textContent = pageTrack.title;
@@ -544,9 +626,16 @@ function updatePlayerUi() {
     $("#page-player-album").textContent = pageTrack.album;
     $("#page-player-cover").src = pageTrack.cover || "";
     $("#page-player-cover").alt = pageTrack.cover ? `Bìa album của ${pageTrack.title}` : "";
+    $("#page-player-genre").textContent = pageGenre.toUpperCase();
+    $("#page-player-index").textContent = String(pageTrackIndex + 1).padStart(2, "0");
+    $("#page-player-tag").textContent = pageTrack.tag;
+    $("#page-player-position").textContent = `${String(pageTrackIndex + 1).padStart(2, "0")} / ${String(tracks.length).padStart(2, "0")}`;
+    $("#page-player-quote").textContent = `“ ${pageTrack.title} — ${pageTrack.artist} ”`;
+    $("#player-page").style.setProperty("--page-cover", pageTrack.cover ? `url("${pageTrack.cover}")` : "none");
   }
   $("#player-page").classList.toggle("is-playing", !!track && state.isPlaying);
   $("#page-player-status").textContent = track && state.isPlaying ? "ĐANG PHÁT" : "SẴN SÀNG PHÁT";
+  syncProgressUi();
   $$(".track-row").forEach(row => { const isCurrent = row.dataset.trackId === state.currentId; row.classList.toggle("current-track", isCurrent); const index = $(".track-index", row); if (index) index.textContent = isCurrent && state.isPlaying ? "♫" : String(tracks.findIndex(track => track.id === row.dataset.trackId) + 1).padStart(2, "0"); });
 }
 function playTrack(id) {
@@ -554,12 +643,16 @@ function playTrack(id) {
   const changingTrack = id !== state.currentId;
   state.currentId = id;
   if (changingTrack) { audio.src = track.audio; audio.currentTime = 0; }
+  prepareAudioVisualizer();
   audio.play().then(() => { state.isPlaying = true; updatePlayerUi(); }).catch(() => { state.isPlaying = false; updatePlayerUi(); showToast("Không thể phát file nhạc này."); });
   updatePlayerUi();
 }
 function playFirstTrack() { const firstTrack = tracks[0]; if (!firstTrack) { showToast("Thư viện chưa có bài hát."); return; } playTrack(firstTrack.id); }
-function togglePlayback() { if (!state.currentId) { playFirstTrack(); return; } if (audio.paused) { audio.play(); state.isPlaying = true; } else { audio.pause(); state.isPlaying = false; } updatePlayerUi(); }
+function togglePlayback() { if (!state.currentId) { playFirstTrack(); return; } if (audio.paused) { prepareAudioVisualizer(); audio.play(); state.isPlaying = true; } else { audio.pause(); state.isPlaying = false; } updatePlayerUi(); }
 function moveTrack(direction) { if (!tracks.length) { showToast("Thư viện chưa có bài hát."); return; } let index = tracks.findIndex(track => track.id === state.currentId); if (index < 0) index = 0; if (state.shuffle) { let next = Math.floor(Math.random() * tracks.length); if (tracks.length > 1 && next === index) next = (next + 1) % tracks.length; playTrack(tracks[next].id); return; } playTrack(tracks[(index + direction + tracks.length) % tracks.length].id); }
+function toggleShuffle() { state.shuffle = !state.shuffle; updatePlayerUi(); showToast(state.shuffle ? "Đã bật phát ngẫu nhiên." : "Đã tắt phát ngẫu nhiên."); }
+function toggleRepeat() { state.repeat = !state.repeat; audio.loop = state.repeat; updatePlayerUi(); showToast(state.repeat ? "Đang lặp lại bài hát." : "Đã tắt lặp lại bài hát."); }
+function toggleCurrentLike() { if (!state.currentId) return; state.likes.has(state.currentId) ? state.likes.delete(state.currentId) : state.likes.add(state.currentId); saveState(); updatePlayerUi(); }
 
 function openTrackMenu(button) {
   $$(".track-menu-popover").forEach(menu => menu.remove());
@@ -582,29 +675,31 @@ function openPlayerPage() {
   showPage("player");
   updatePlayerUi();
 }
-function showPage(page) { $$(".page").forEach(item => item.classList.toggle("active-page", item.id === `${page}-page`)); $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); $(".sidebar").classList.remove("open"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+function showPage(page) { $$(".page").forEach(item => item.classList.toggle("active-page", item.id === `${page}-page`)); $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); document.body.classList.toggle("player-mode", page === "player"); $(".sidebar").classList.remove("open"); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
 function registerEvents() {
   $("#hero-play-button").addEventListener("click", playFirstTrack);
   $("#play-button").addEventListener("click", togglePlayback); $("#previous-button").addEventListener("click", () => moveTrack(-1)); $("#next-button").addEventListener("click", () => moveTrack(1));
   $("#page-play-button").addEventListener("click", togglePlayback); $("#page-previous-button").addEventListener("click", () => moveTrack(-1)); $("#page-next-button").addEventListener("click", () => moveTrack(1));
+  $("#page-shuffle-button").addEventListener("click", toggleShuffle); $("#page-repeat-button").addEventListener("click", toggleRepeat); $("#page-like-button").addEventListener("click", toggleCurrentLike);
   $("#shuffle-button").addEventListener("click", () => { state.shuffle = !state.shuffle; updatePlayerUi(); showToast(state.shuffle ? "Đã bật phát ngẫu nhiên." : "Đã tắt phát ngẫu nhiên."); });
   $("#repeat-button").addEventListener("click", () => { state.repeat = !state.repeat; audio.loop = state.repeat; updatePlayerUi(); showToast(state.repeat ? "Đang lặp lại bài hát." : "Đã tắt lặp lại."); });
   $("#like-button").addEventListener("click", () => { if (!state.currentId) return; state.likes.has(state.currentId) ? state.likes.delete(state.currentId) : state.likes.add(state.currentId); saveState(); updatePlayerUi(); });
-  $("#progress-input").addEventListener("input", event => { if (audio.duration) audio.currentTime = (event.target.value / 100) * audio.duration; });
+  const seekToPercent = event => { if (audio.duration) audio.currentTime = (event.target.value / 100) * audio.duration; };
+  $("#progress-input").addEventListener("input", seekToPercent); $("#page-progress-input").addEventListener("input", seekToPercent);
   $("#volume-input").addEventListener("input", event => { audio.volume = event.target.value / 100; $("#mute-button").textContent = audio.volume === 0 ? "◌" : "◖"; });
   $("#mute-button").addEventListener("click", () => { audio.muted = !audio.muted; $("#mute-button").textContent = audio.muted ? "◌" : "◖"; });
-  audio.addEventListener("loadedmetadata", () => { $("#duration-time").textContent = formatTime(audio.duration); });
-  audio.addEventListener("timeupdate", () => { $("#elapsed-time").textContent = formatTime(audio.currentTime); $("#progress-input").value = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0; });
-  audio.addEventListener("play", () => { state.isPlaying = true; updatePlayerUi(); }); audio.addEventListener("pause", () => { state.isPlaying = false; updatePlayerUi(); }); audio.addEventListener("ended", () => { if (!state.repeat) moveTrack(1); });
+  audio.addEventListener("loadedmetadata", syncProgressUi);
+  audio.addEventListener("timeupdate", syncProgressUi);
+  audio.addEventListener("play", () => { state.isPlaying = true; startAudioVisualizer(); updatePlayerUi(); }); audio.addEventListener("pause", () => { state.isPlaying = false; resetAudioVisualizer(); updatePlayerUi(); }); audio.addEventListener("ended", () => { if (!state.repeat) moveTrack(1); });
   $("#search-input").addEventListener("input", event => { const query = event.target.value.trim().toLowerCase(); const found = tracks.filter(track => `${track.title} ${track.artist} ${track.album} ${track.genre}`.toLowerCase().includes(query)); renderTracks(found, Boolean(query)); });
   document.addEventListener("keydown", event => { if (event.key === "Escape") { $("#search-input").value = ""; $("#search-input").blur(); $$(".track-menu-popover").forEach(menu => menu.remove()); } });
   $$("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); link.dataset.page === "player" ? openPlayerPage() : showPage(link.dataset.page); }));
-  $("#new-playlist-button").addEventListener("click", openPlaylistDialog); $("#profile-button").addEventListener("click", () => { $("#profile-name-input").value = state.profile || ""; $("#profile-dialog").showModal(); }); $("#mobile-menu-button").addEventListener("click", () => $(".sidebar").classList.toggle("open")); $("#theme-toggle").addEventListener("click", toggleTheme); $("#open-player-page").addEventListener("click", openPlayerPage);
+  $("#new-playlist-button").addEventListener("click", openPlaylistDialog); $("#profile-button").addEventListener("click", () => { $("#profile-name-input").value = state.profile || ""; $("#profile-dialog").showModal(); }); $("#mobile-menu-button").addEventListener("click", () => $(".sidebar").classList.toggle("open")); $("#open-player-page").addEventListener("click", openPlayerPage);
   $("#playlist-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#playlist-name-input").value.trim(); if (!name) return; const playlist = { id: crypto.randomUUID(), name, description: $("#playlist-description-input").value.trim(), trackIds: [] }; state.playlists.unshift(playlist); const pending = $("#playlist-dialog").dataset.pendingTrack; if (pending) { playlist.trackIds.push(pending); delete $("#playlist-dialog").dataset.pendingTrack; } saveState(); $("#playlist-dialog").close(); renderSidebar(); renderPlaylists(); showToast(pending ? `Đã tạo “${name}” và thêm bài hát.` : `Đã tạo playlist “${name}”.`); });
   $("#profile-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#profile-name-input").value.trim(); if (!name) return; saveState(); state.profile = name; loadProfileData(); saveState(); $("#profile-dialog").close(); renderAll(); showToast(`Đang dùng hồ sơ ${name}. Playlist được lưu riêng trên thiết bị này.`); });
   $$('[data-close-dialog]').forEach(button => button.addEventListener("click", () => { const dialog = button.closest("dialog"); if (dialog.id === "playlist-dialog") delete dialog.dataset.pendingTrack; dialog.close(); }));
   document.addEventListener("click", event => { if (!event.target.closest(".track-menu")) $$(".track-menu-popover").forEach(menu => menu.remove()); if (event.target.closest("[data-new-playlist]")) openPlaylistDialog(); });
 }
 
-loadTheme(); loadState(); renderAll(); registerEvents();
+loadState(); renderAll(); registerEvents();
