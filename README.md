@@ -32,13 +32,16 @@ python -m http.server 4173
 
 Sau đó mở `http://localhost:4173`.
 
-## Thay nhạc thật
+## Thêm nhạc
 
-Ba file WAV hiện có chỉ là nhạc demo tự tạo để web hoạt động ngay. Khi sử dụng nội bộ, hãy đặt các MP3 đã được cấp quyền sử dụng trong `assets/audio/`, rồi sửa danh sách `tracks` ở đầu [app.js](./app.js). Ví dụ:
+Thư viện khởi đầu trống. Đặt các MP3 đã được cấp quyền sử dụng trong `assets/audio/`, rồi thêm bài hát vào danh sách `tracks` ở đầu [app.js](./app.js). Ví dụ:
 
 ```js
+genre: "piano",
 audio: "assets/audio/ten-bai-hat.mp3"
 ```
+
+Các bài được hiển thị theo thể loại. Muốn thêm Guitar sau này, thêm `{ id: "guitar", label: "Guitar" }` vào `genres` ở đầu `app.js`, rồi gán `genre: "guitar"` cho từng bài Guitar.
 
 Xem thêm trong [assets/audio/README.md](./assets/audio/README.md).
 

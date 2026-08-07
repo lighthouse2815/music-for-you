@@ -1,11 +1,20 @@
+const genres = [
+  { id: "piano", label: "Piano" }
+];
+
 const tracks = [
-  { id: "dawn", title: "Lần đầu tiên", artist: "Hạ Vân", album: "Một chiều trong veo", duration: "0:16", seconds: 16, color: "cover-dawn", tag: "TÌNH CA", audio: "assets/audio/lan-dau-tien.wav" },
-  { id: "forest", title: "Cửa sổ màu xanh", artist: "Nhật Minh", album: "Thư gửi mùa hạ", duration: "0:18", seconds: 18, color: "cover-forest", tag: "INDIE", audio: "assets/audio/cua-so-mau-xanh.wav" },
-  { id: "lilac", title: "Mơ về một ngày", artist: "Liên An", album: "Mơ về một ngày", duration: "0:14", seconds: 14, color: "cover-lilac", tag: "CHILL", audio: "assets/audio/mo-ve-mot-ngay.wav" },
-  { id: "blue", title: "Nơi gió thôi vội", artist: "Khôi Nguyên", album: "Phía bên kia", duration: "0:16", seconds: 16, color: "cover-blue", tag: "ACOUSTIC", audio: "assets/audio/lan-dau-tien.wav" },
-  { id: "sienna", title: "Đã từng rất gần", artist: "Mây", album: "Bản nháp tháng tám", duration: "0:18", seconds: 18, color: "cover-sienna", tag: "TÂM SỰ", audio: "assets/audio/cua-so-mau-xanh.wav" },
-  { id: "night", title: "Đêm có tiếng mưa", artist: "Vũ Lâm", album: "Nửa đêm", duration: "0:14", seconds: 14, color: "cover-night", tag: "LO-FI", audio: "assets/audio/mo-ve-mot-ngay.wav" },
-  { id: "wave", title: "Ngủ quên trên mây", artist: "An Kha", album: "Một bầu trời khác", duration: "0:16", seconds: 16, color: "cover-wave", tag: "DREAM POP", audio: "assets/audio/lan-dau-tien.wav" }
+  {
+    id: "yoru-ni-kakeru-piano-cover",
+    title: "Yoru ni Kakeru",
+    artist: "YOASOBI",
+    album: "Piano Covers",
+    duration: "4:31",
+    seconds: 271,
+    color: "cover-dawn",
+    tag: "PIANO",
+    genre: "piano",
+    audio: "assets/audio/YOASOBI - Yoru ni Kakeru (Racing Into The Night) - Piano Cover (Visualizer and Sheets).mp3"
+  }
 ];
 
 const state = { currentId: null, isPlaying: false, repeat: false, shuffle: false, activePlaylistId: null, profile: "Khách nghe nhạc", profiles: {}, likes: new Set(), playlists: [] };
@@ -23,12 +32,14 @@ function loadState() {
     // Giữ được dữ liệu của bản giao diện cũ nếu có trong trình duyệt.
     if (!saved.profiles && (saved.playlists || saved.likes)) state.profiles[state.profile] = { playlists: saved.playlists || [], likes: saved.likes || [] };
     loadProfileData();
+    saveState();
   } catch { localStorage.removeItem(storeKey); }
 }
 function loadProfileData() {
   const profileData = state.profiles[state.profile] || { playlists: [], likes: [] };
-  state.playlists = Array.isArray(profileData.playlists) ? profileData.playlists : [];
-  state.likes = new Set(profileData.likes || []);
+  const availableTrackIds = new Set(tracks.map(track => track.id));
+  state.playlists = Array.isArray(profileData.playlists) ? profileData.playlists.map(playlist => ({ ...playlist, trackIds: (playlist.trackIds || []).filter(id => availableTrackIds.has(id)) })) : [];
+  state.likes = new Set((profileData.likes || []).filter(id => availableTrackIds.has(id)));
   state.activePlaylistId = null;
 }
 function saveState() {
@@ -53,17 +64,24 @@ function trackRow(track, index, options = {}) {
     <div class="track-menu"><button class="row-menu" data-menu-track="${track.id}" type="button" aria-label="Thêm ${track.title} vào playlist">•••</button>${remove}</div>
   </article>`;
 }
-function renderTracks(items = tracks) {
-  const html = items.length ? items.map((track, index) => trackRow(track, index)).join("") : `<p class="empty-state">Không tìm thấy bài hát phù hợp.</p>`;
+function emptyTracksMessage() { return `<p class="empty-state">Không tìm thấy bài hát phù hợp.</p>`; }
+function tracksForGenre(genre, items) { return genre.id === "unclassified" ? items.filter(track => !genres.some(item => item.id === track.genre)) : items.filter(track => track.genre === genre.id); }
+function genreGroups(items) {
+  const unclassifiedTracks = items.filter(track => !genres.some(genre => genre.id === track.genre));
+  return unclassifiedTracks.length ? [...genres, { id: "unclassified", label: "Chưa phân loại" }] : genres;
+}
+function genreGroup(genre, items) {
+  const genreTracks = tracksForGenre(genre, items);
+  const rows = genreTracks.length ? genreTracks.map((track, index) => trackRow(track, index)).join("") : `<p class="empty-state">Chưa có bài hát thuộc thể loại ${genre.label}.</p>`;
+  return `<section class="genre-group"><div class="genre-heading"><div><p class="eyebrow">THỂ LOẠI</p><h3>${genre.label}</h3></div><span class="count-label">${genreTracks.length} BÀI HÁT</span></div><div class="track-list">${rows}</div></section>`;
+}
+function renderTracks(items = tracks, isSearching = false) {
+  const html = isSearching && !items.length ? emptyTracksMessage() : genreGroups(items).map(genre => genreGroup(genre, items)).join("");
   $("#featured-tracks").innerHTML = html;
   $("#library-tracks").innerHTML = html;
-  $("#track-count").textContent = `${tracks.length} BÀI HÁT`;
+  $("#track-count").textContent = tracks.length ? `${tracks.length} BÀI HÁT` : "CHƯA CÓ BÀI HÁT";
   $$(".track-row").forEach(row => row.addEventListener("click", event => { if (event.target.closest("button")) return; playTrack(row.dataset.trackId); }));
   $$("[data-menu-track]").forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openTrackMenu(button); }));
-}
-function renderContinue() {
-  $("#continue-grid").innerHTML = tracks.slice(0, 3).map((track, index) => `<article class="continue-card ${track.color}" data-card-track="${track.id}"><span class="continue-number">0${index + 1} / 0${tracks.length}</span><h3>${track.title}</h3><p>${track.artist}</p><button class="card-play" type="button" aria-label="Phát ${track.title}">▶</button></article>`).join("");
-  $$('[data-card-track]').forEach(card => card.addEventListener("click", () => playTrack(card.dataset.cardTrack)));
 }
 function renderSidebar() {
   const target = $("#sidebar-playlist-list");
@@ -93,7 +111,7 @@ function renderPlaylistDetail() {
   $$('[data-menu-track]', target).forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openTrackMenu(button); }));
   $$(".remove-from-playlist", target).forEach(button => button.addEventListener("click", () => removeTrackFromPlaylist(button.dataset.playlistId, button.dataset.trackId)));
 }
-function renderAll() { renderTracks(); renderContinue(); renderSidebar(); renderPlaylists(); renderPlaylistDetail(); setProfileUi(); updatePlayerUi(); }
+function renderAll() { renderTracks(); renderSidebar(); renderPlaylists(); renderPlaylistDetail(); setProfileUi(); updatePlayerUi(); }
 
 function updatePlayerUi() {
   const track = getTrack(state.currentId);
@@ -114,8 +132,9 @@ function playTrack(id) {
   audio.play().then(() => { state.isPlaying = true; updatePlayerUi(); }).catch(() => { state.isPlaying = false; updatePlayerUi(); showToast("Không thể phát file nhạc này."); });
   updatePlayerUi();
 }
-function togglePlayback() { if (!state.currentId) { playTrack(tracks[0].id); return; } if (audio.paused) { audio.play(); state.isPlaying = true; } else { audio.pause(); state.isPlaying = false; } updatePlayerUi(); }
-function moveTrack(direction) { let index = tracks.findIndex(track => track.id === state.currentId); if (index < 0) index = 0; if (state.shuffle) { let next = Math.floor(Math.random() * tracks.length); if (tracks.length > 1 && next === index) next = (next + 1) % tracks.length; playTrack(tracks[next].id); return; } playTrack(tracks[(index + direction + tracks.length) % tracks.length].id); }
+function playFirstTrack() { const firstTrack = tracks[0]; if (!firstTrack) { showToast("Thư viện chưa có bài hát."); return; } playTrack(firstTrack.id); }
+function togglePlayback() { if (!state.currentId) { playFirstTrack(); return; } if (audio.paused) { audio.play(); state.isPlaying = true; } else { audio.pause(); state.isPlaying = false; } updatePlayerUi(); }
+function moveTrack(direction) { if (!tracks.length) { showToast("Thư viện chưa có bài hát."); return; } let index = tracks.findIndex(track => track.id === state.currentId); if (index < 0) index = 0; if (state.shuffle) { let next = Math.floor(Math.random() * tracks.length); if (tracks.length > 1 && next === index) next = (next + 1) % tracks.length; playTrack(tracks[next].id); return; } playTrack(tracks[(index + direction + tracks.length) % tracks.length].id); }
 
 function openTrackMenu(button) {
   $$(".track-menu-popover").forEach(menu => menu.remove());
@@ -134,7 +153,7 @@ function openPlaylistDialog() { const dialog = $("#playlist-dialog"); if (dialog
 function showPage(page) { $$(".page").forEach(item => item.classList.toggle("active-page", item.id === `${page}-page`)); $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); $(".sidebar").classList.remove("open"); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
 function registerEvents() {
-  $("#hero-play-button").addEventListener("click", () => playTrack(tracks[0].id));
+  $("#hero-play-button").addEventListener("click", playFirstTrack);
   $("#play-button").addEventListener("click", togglePlayback); $("#previous-button").addEventListener("click", () => moveTrack(-1)); $("#next-button").addEventListener("click", () => moveTrack(1));
   $("#shuffle-button").addEventListener("click", () => { state.shuffle = !state.shuffle; updatePlayerUi(); showToast(state.shuffle ? "Đã bật phát ngẫu nhiên." : "Đã tắt phát ngẫu nhiên."); });
   $("#repeat-button").addEventListener("click", () => { state.repeat = !state.repeat; audio.loop = state.repeat; updatePlayerUi(); showToast(state.repeat ? "Đang lặp lại bài hát." : "Đã tắt lặp lại."); });
@@ -145,7 +164,7 @@ function registerEvents() {
   audio.addEventListener("loadedmetadata", () => { $("#duration-time").textContent = formatTime(audio.duration); });
   audio.addEventListener("timeupdate", () => { $("#elapsed-time").textContent = formatTime(audio.currentTime); $("#progress-input").value = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0; });
   audio.addEventListener("play", () => { state.isPlaying = true; updatePlayerUi(); }); audio.addEventListener("pause", () => { state.isPlaying = false; updatePlayerUi(); }); audio.addEventListener("ended", () => { if (!state.repeat) moveTrack(1); });
-  $("#search-input").addEventListener("input", event => { const query = event.target.value.trim().toLowerCase(); const found = tracks.filter(track => `${track.title} ${track.artist} ${track.album}`.toLowerCase().includes(query)); $("#featured-tracks").innerHTML = found.map((track, index) => trackRow(track, index)).join("") || `<p class="empty-state">Không tìm thấy bài hát phù hợp.</p>`; $("#library-tracks").innerHTML = $("#featured-tracks").innerHTML; $$(".track-row").forEach(row => row.addEventListener("click", event => { if (!event.target.closest("button")) playTrack(row.dataset.trackId); })); $$("[data-menu-track]").forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openTrackMenu(button); })); });
+  $("#search-input").addEventListener("input", event => { const query = event.target.value.trim().toLowerCase(); const found = tracks.filter(track => `${track.title} ${track.artist} ${track.album} ${track.genre}`.toLowerCase().includes(query)); renderTracks(found, Boolean(query)); });
   document.addEventListener("keydown", event => { if (event.key === "Escape") { $("#search-input").value = ""; $("#search-input").blur(); $$(".track-menu-popover").forEach(menu => menu.remove()); } });
   $$("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); showPage(link.dataset.page); }));
   $("#new-playlist-button").addEventListener("click", openPlaylistDialog); $("#profile-button").addEventListener("click", () => { $("#profile-name-input").value = state.profile || ""; $("#profile-dialog").showModal(); }); $("#mobile-menu-button").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
