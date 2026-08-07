@@ -3,19 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111113" />
+    <meta id="theme-color-meta" name="theme-color" content="#f2f7f0" />
+    <link rel="icon" type="image/png" href="assets/brand/am-luu-logo.png" />
     <title>Âm Lưu — Nghe theo cách của bạn</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=logo-toolbar-1" />
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <main class="app-shell">
       <aside class="sidebar">
         <a class="wordmark" href="#home" aria-label="Âm Lưu trang chủ">
-          <span class="wordmark-mark">A</span>
+          <span class="brand-logo-frame brand-logo-frame--sidebar"><img src="assets/brand/am-luu-logo.png" alt="Logo Âm Lưu" /></span>
           <span>Âm Lưu</span>
         </a>
 
@@ -44,7 +45,13 @@
 
       <section class="content">
         <header class="topbar">
+          <div class="topbar-leading">
           <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Mở menu">☰</button>
+            <a class="topbar-brand" href="#home" data-page="home" aria-label="Âm Lưu trang chủ">
+              <span class="brand-logo-frame brand-logo-frame--topbar"><img src="assets/brand/am-luu-logo.png" alt="Logo Âm Lưu" /></span>
+              <span class="topbar-brand-copy"><strong>Âm Lưu</strong><small>music library</small></span>
+            </a>
+          </div>
           <label class="search-box" for="search-input">
             <span>⌕</span>
             <input id="search-input" type="search" placeholder="Tìm bài hát, nghệ sĩ..." autocomplete="off" />
@@ -160,6 +167,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <audio id="audio-player" preload="metadata"></audio>
-    <script src="app.js"></script>
+    <script src="app.js?v=logo-toolbar-1"></script>
   </body>
 </html>

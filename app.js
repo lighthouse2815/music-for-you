@@ -1,5 +1,8 @@
 const genres = [
-  { id: "piano", label: "Piano" }
+  { id: "piano", label: "Piano" },
+  { id: "japanese-music", label: "Nhạc Nhật" },
+  { id: "chinese-music", label: "Nhạc Trung" },
+  { id: "nightcore", label: "Nightcore" }
 ];
 
 const tracks = [
@@ -15,6 +18,370 @@ const tracks = [
     genre: "piano",
     audio: "assets/audio/YOASOBI - Yoru ni Kakeru (Racing Into The Night) - Piano Cover (Visualizer and Sheets).mp3",
     cover: "assets/covers/yoru-ni-kakeru.png"
+  },
+  {
+    id: "yoru-ni-kakeru-vocal",
+    title: "Yoru ni Kakeru",
+    artist: "YOASOBI",
+    album: "Nhạc Nhật",
+    duration: "4:21",
+    seconds: 261,
+    color: "cover-lilac",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/yoru-ni-kakeru-vocal.mp3",
+    cover: "assets/covers/yoru-ni-kakeru.png"
+  },
+  {
+    id: "gunjou",
+    title: "Gunjou",
+    artist: "YOASOBI",
+    album: "Nhạc Nhật",
+    duration: "4:22",
+    seconds: 262,
+    color: "cover-sienna",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/gunjou.mp3",
+    cover: "assets/covers/gunjou.png"
+  },
+  {
+    id: "crying-for-rain",
+    title: "Kawaki wo Ameku",
+    artist: "Minami",
+    album: "Kawaki wo Ameku",
+    duration: "4:13",
+    seconds: 253,
+    color: "cover-dusk",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/crying-for-rain.mp3",
+    cover: "assets/covers/crying-for-rain.png"
+  },
+  {
+    id: "aliez",
+    title: "aLIEz",
+    artist: "SawanoHiroyuki[nZk]:mizuki",
+    album: "A/Z | aLIEz",
+    duration: "4:28",
+    seconds: 268,
+    color: "cover-midnight",
+    tag: "ANIME",
+    genre: "japanese-music",
+    audio: "assets/audio/aliez.mp3",
+    cover: "assets/covers/aliez.png"
+  },
+  {
+    id: "sakura",
+    title: "Sakura",
+    artist: "Ikimonogakari",
+    album: "SAKURA",
+    duration: "5:55",
+    seconds: 355,
+    color: "cover-rose",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/sakura.mp3",
+    cover: "assets/covers/sakura.png"
+  },
+  {
+    id: "dochuu-ni-saku",
+    title: "Dochuu ni Saku",
+    artist: "Wolpis Carter",
+    album: "Kore kara mo Wolpis-sha no Teikyou de Okuri shimasu",
+    duration: "4:50",
+    seconds: 290,
+    color: "cover-rain",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/dochuu-ni-saku.mp3",
+    cover: "assets/covers/dochuu-ni-saku.png"
+  },
+  {
+    id: "call-of-silence-clear-sky-remix",
+    title: "Call of Silence (Clear Sky Remix)",
+    artist: "Hiroyuki Sawano feat. Gemie",
+    album: "Attack on Titan Season 2 Original Soundtrack",
+    duration: "4:40",
+    seconds: 280,
+    color: "cover-steel",
+    tag: "ANIME",
+    genre: "japanese-music",
+    audio: "assets/audio/call-of-silence-clear-sky-remix.mp3",
+    cover: "assets/covers/call-of-silence-clear-sky-remix.png"
+  },
+  {
+    id: "unravel",
+    title: "unravel",
+    artist: "TK from Ling tosite sigure",
+    album: "unravel",
+    duration: "4:27",
+    seconds: 267,
+    color: "cover-azure",
+    tag: "ANIME",
+    genre: "japanese-music",
+    audio: "assets/audio/unravel.mp3",
+    cover: "assets/covers/unravel.png"
+  },
+  {
+    id: "hotaru",
+    title: "Hotaru",
+    artist: "Fujita Maiko",
+    album: "Shunkan",
+    duration: "4:57",
+    seconds: 297,
+    color: "cover-nightfall",
+    tag: "J-POP",
+    genre: "japanese-music",
+    audio: "assets/audio/hotaru.mp3",
+    cover: "assets/covers/hotaru.png"
+  },
+  {
+    id: "ci-jiu-men-hui-yi",
+    title: "Ci Jiu Men Hui Yi",
+    artist: "Deng Shenme Jun",
+    album: "Ci Jiu Men Hui Yi",
+    duration: "4:00",
+    seconds: 240,
+    color: "cover-crimson",
+    tag: "C-POP",
+    genre: "chinese-music",
+    audio: "assets/audio/ci-jiu-men-hui-yi.mp3",
+    cover: "assets/covers/ci-jiu-men-hui-yi.png"
+  },
+  {
+    id: "sparkle",
+    title: "Sparkle (Movie Version)",
+    artist: "RADWIMPS",
+    album: "Your Name. Original Motion Picture Soundtrack",
+    duration: "6:50",
+    seconds: 410,
+    color: "cover-starlight",
+    tag: "ANIME",
+    genre: "japanese-music",
+    audio: "assets/audio/sparkle.mp3",
+    cover: "assets/covers/sparkle.png"
+  },
+  {
+    id: "butterflies-nightcore",
+    title: "Butterflies",
+    artist: "RevoMemel",
+    album: "Nightcore Butterflies",
+    duration: "3:26",
+    seconds: 206,
+    color: "cover-violet",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/butterflies-nightcore.mp3",
+    cover: "assets/covers/butterflies-nightcore.png"
+  },
+  {
+    id: "shadows-nightcore",
+    title: "Shadows",
+    artist: "it's different feat. Miss Mary",
+    album: "Shadows",
+    duration: "2:45",
+    seconds: 165,
+    color: "cover-shadow",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/shadows-nightcore.mp3",
+    cover: "assets/covers/shadows-nightcore.png"
+  },
+  {
+    id: "lily-nightcore",
+    title: "Lily",
+    artist: "Alan Walker, K-391 & Emelie Hollow",
+    album: "Different World",
+    duration: "3:01",
+    seconds: 181,
+    color: "cover-forest",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/lily-nightcore.mp3",
+    cover: "assets/covers/lily-nightcore.png"
+  },
+  {
+    id: "angel-with-a-shotgun-nightcore",
+    title: "Angel With a Shotgun",
+    artist: "The Cab",
+    album: "Symphony Soldier",
+    duration: "3:12",
+    seconds: 192,
+    color: "cover-ink",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/angel-with-a-shotgun-nightcore.mp3",
+    cover: "assets/covers/angel-with-a-shotgun-nightcore.png"
+  },
+  {
+    id: "what-a-shame-nightcore",
+    title: "What a Shame",
+    artist: "Leyla Blue",
+    album: "What a Shame",
+    duration: "2:27",
+    seconds: 147,
+    color: "cover-rosewood",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/what-a-shame-nightcore.mp3",
+    cover: "assets/covers/what-a-shame-nightcore.png"
+  },
+  {
+    id: "lost-control-nightcore",
+    title: "Lost Control",
+    artist: "Alan Walker & Sorana",
+    album: "Different World",
+    duration: "3:22",
+    seconds: 202,
+    color: "cover-lilac",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/lost-control-nightcore.mp3",
+    cover: "assets/covers/lost-control-nightcore.png"
+  },
+  {
+    id: "to-be-human-nightcore",
+    title: "To Be Human",
+    artist: "MARINA",
+    album: "LOVE + FEAR",
+    duration: "3:34",
+    seconds: 214,
+    color: "cover-slate",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/to-be-human-nightcore.mp3",
+    cover: "assets/covers/to-be-human-nightcore.png"
+  },
+  {
+    id: "hiding-in-the-blue-nightcore",
+    title: "Hiding In The Blue",
+    artist: "TheFatRat & RIELL",
+    album: "PARALLAX",
+    duration: "3:19",
+    seconds: 199,
+    color: "cover-cosmos",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/hiding-in-the-blue-nightcore.mp3",
+    cover: "assets/covers/hiding-in-the-blue-nightcore.png"
+  },
+  {
+    id: "without-me-illenium-remix-nightcore",
+    title: "Without Me (ILLENIUM Remix)",
+    artist: "Halsey & ILLENIUM",
+    album: "Without Me (ILLENIUM Remix)",
+    duration: "3:43",
+    seconds: 223,
+    color: "cover-blush",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/without-me-illenium-remix-nightcore.mp3",
+    cover: "assets/covers/without-me-illenium-remix-nightcore.png"
+  },
+  {
+    id: "close-to-the-sun-nightcore",
+    title: "Close To The Sun",
+    artist: "TheFatRat & Anjulie",
+    album: "Close To The Sun",
+    duration: "2:51",
+    seconds: 171,
+    color: "cover-dawn",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/close-to-the-sun-nightcore.mp3",
+    cover: "assets/covers/close-to-the-sun-nightcore.png"
+  },
+  {
+    id: "home-nightcore",
+    title: "Home",
+    artist: "Cr3on feat. Thorns & Swedish Red Elephant",
+    album: "Home",
+    duration: "3:08",
+    seconds: 188,
+    color: "cover-amethyst",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/home-nightcore.mp3",
+    cover: "assets/covers/home-nightcore.png"
+  },
+  {
+    id: "do-or-die-nightcore",
+    title: "Do Or Die",
+    artist: "Axel Johansson",
+    album: "Do Or Die",
+    duration: "2:58",
+    seconds: 178,
+    color: "cover-moonlit",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/do-or-die-nightcore.mp3",
+    cover: "assets/covers/do-or-die-nightcore.png"
+  },
+  {
+    id: "darkside-nightcore",
+    title: "Darkside",
+    artist: "Alan Walker, Au/Ra & Tomine Harket",
+    album: "Different World",
+    duration: "3:05",
+    seconds: 185,
+    color: "cover-aquamarine",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/darkside-nightcore.mp3",
+    cover: "assets/covers/darkside-nightcore.png"
+  },
+  {
+    id: "qing-hua-ci-cantonese",
+    title: "Qing Hua Ci (Cantonese Version)",
+    artist: "Simyee",
+    album: "Qing Hua Ci (Cantonese Version)",
+    duration: "3:21",
+    seconds: 201,
+    color: "cover-lantern",
+    tag: "C-POP",
+    genre: "chinese-music",
+    audio: "assets/audio/qing-hua-ci-cantonese.mp3",
+    cover: "assets/covers/qing-hua-ci-cantonese.png"
+  },
+  {
+    id: "where-we-started-nightcore",
+    title: "Where We Started",
+    artist: "Lost Sky feat. Jex",
+    album: "Where We Started",
+    duration: "3:18",
+    seconds: 198,
+    color: "cover-sapphire",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/where-we-started-nightcore.mp3",
+    cover: "assets/covers/where-we-started-nightcore.png"
+  },
+  {
+    id: "different-world-nightcore",
+    title: "Different World",
+    artist: "Alan Walker, K-391, Sofia Carson & CORSAK",
+    album: "Different World",
+    duration: "3:03",
+    seconds: 183,
+    color: "cover-starlight",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/different-world-nightcore.mp3",
+    cover: "assets/covers/different-world-nightcore.png"
+  },
+  {
+    id: "alone-pt-ii-nightcore",
+    title: "Alone, Pt. II",
+    artist: "Alan Walker & Ava Max",
+    album: "World Of Walker",
+    duration: "2:52",
+    seconds: 172,
+    color: "cover-orchid",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/alone-pt-ii-nightcore.mp3",
+    cover: "assets/covers/alone-pt-ii-nightcore.png"
   }
 ];
 
@@ -57,7 +424,9 @@ function setProfileUi() { const name = displayName(); $("#profile-name").textCon
 function applyTheme(theme) {
   const isDark = theme === "dark";
   const button = $("#theme-toggle");
+  const themeColor = $("#theme-color-meta");
   document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  themeColor.content = isDark ? "#161715" : "#f2f7f0";
   button.textContent = isDark ? "☀" : "☾";
   button.setAttribute("aria-label", isDark ? "Bật chế độ sáng" : "Bật chế độ tối");
   button.setAttribute("aria-pressed", String(isDark));
@@ -91,7 +460,7 @@ function genreGroups(items) {
 function genreGroup(genre, items) {
   const genreTracks = tracksForGenre(genre, items);
   const rows = genreTracks.length ? genreTracks.map((track, index) => trackRow(track, index)).join("") : `<p class="empty-state">Chưa có bài hát thuộc thể loại ${genre.label}.</p>`;
-  return `<section class="genre-group"><div class="genre-heading"><div><p class="eyebrow">THỂ LOẠI</p><h3>${genre.label}</h3></div><span class="count-label">${genreTracks.length} BÀI HÁT</span></div><div class="track-list">${rows}</div></section>`;
+  return `<section class="genre-group"><div class="genre-heading"><h3>${genre.label}</h3><span class="count-label">${genreTracks.length} BÀI HÁT</span></div><div class="track-list">${rows}</div></section>`;
 }
 function renderTracks(items = tracks, isSearching = false) {
   const html = isSearching && !items.length ? emptyTracksMessage() : genreGroups(items).map(genre => genreGroup(genre, items)).join("");
