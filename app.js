@@ -416,6 +416,8 @@ const $ = (selector, parent = document) => parent.querySelector(selector);
 const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
 const audio = $("#audio-player");
 const storeKey = "am-luu-v1";
+const fallingNotesKey = "am-luu-falling-notes-v1";
+let fallingNotesEnabled = localStorage.getItem(fallingNotesKey) !== "off";
 let audioContext;
 let audioAnalyser;
 let audioFrequencyData;
@@ -522,6 +524,19 @@ function startAudioVisualizer() {
 
 function showToast(message) { const toast = $("#toast"); toast.textContent = message; toast.classList.add("visible"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("visible"), 2600); }
 function setProfileUi() { const name = displayName(); $("#profile-name").textContent = name; $("#side-profile-name").textContent = name.toUpperCase(); $("#profile-initial").textContent = name.trim().charAt(0).toUpperCase() || "K"; }
+function updateFallingNotesUi() {
+  const playerPage = $("#player-page");
+  const button = $("#falling-notes-toggle");
+  playerPage.classList.toggle("notes-rain-enabled", fallingNotesEnabled);
+  button.setAttribute("aria-pressed", String(fallingNotesEnabled));
+  button.title = fallingNotesEnabled ? "Tắt hiệu ứng nốt nhạc rơi" : "Bật hiệu ứng nốt nhạc rơi";
+  $("[data-notes-rain-state]", button).textContent = fallingNotesEnabled ? "Bật" : "Tắt";
+}
+function toggleFallingNotes() {
+  fallingNotesEnabled = !fallingNotesEnabled;
+  localStorage.setItem(fallingNotesKey, fallingNotesEnabled ? "on" : "off");
+  updateFallingNotesUi();
+}
 
 function coverMarkup(track, fallback) { return track.cover ? `<img src="${track.cover}" alt="Bìa album của ${track.title}" />` : fallback; }
 function trackRow(track, index, options = {}) {
@@ -696,10 +711,11 @@ function registerEvents() {
   document.addEventListener("keydown", event => { if (event.key === "Escape") { $("#search-input").value = ""; $("#search-input").blur(); $$(".track-menu-popover").forEach(menu => menu.remove()); } });
   $$("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); link.dataset.page === "player" ? openPlayerPage() : showPage(link.dataset.page); }));
   $("#new-playlist-button").addEventListener("click", openPlaylistDialog); $("#profile-button").addEventListener("click", () => { $("#profile-name-input").value = state.profile || ""; $("#profile-dialog").showModal(); }); $("#mobile-menu-button").addEventListener("click", () => $(".sidebar").classList.toggle("open")); $("#open-player-page").addEventListener("click", openPlayerPage);
+  $("#falling-notes-toggle").addEventListener("click", toggleFallingNotes);
   $("#playlist-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#playlist-name-input").value.trim(); if (!name) return; const playlist = { id: crypto.randomUUID(), name, description: $("#playlist-description-input").value.trim(), trackIds: [] }; state.playlists.unshift(playlist); const pending = $("#playlist-dialog").dataset.pendingTrack; if (pending) { playlist.trackIds.push(pending); delete $("#playlist-dialog").dataset.pendingTrack; } saveState(); $("#playlist-dialog").close(); renderSidebar(); renderPlaylists(); showToast(pending ? `Đã tạo “${name}” và thêm bài hát.` : `Đã tạo playlist “${name}”.`); });
   $("#profile-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#profile-name-input").value.trim(); if (!name) return; saveState(); state.profile = name; loadProfileData(); saveState(); $("#profile-dialog").close(); renderAll(); showToast(`Đang dùng hồ sơ ${name}. Playlist được lưu riêng trên thiết bị này.`); });
   $$('[data-close-dialog]').forEach(button => button.addEventListener("click", () => { const dialog = button.closest("dialog"); if (dialog.id === "playlist-dialog") delete dialog.dataset.pendingTrack; dialog.close(); }));
   document.addEventListener("click", event => { if (!event.target.closest(".track-menu")) $$(".track-menu-popover").forEach(menu => menu.remove()); if (event.target.closest("[data-new-playlist]")) openPlaylistDialog(); });
 }
 
-loadState(); renderAll(); registerEvents();
+loadState(); renderAll(); updateFallingNotesUi(); registerEvents();
