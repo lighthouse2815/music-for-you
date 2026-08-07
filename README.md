@@ -38,10 +38,13 @@ Thư viện khởi đầu trống. Đặt các MP3 đã được cấp quyền s
 
 ```js
 genre: "piano",
-audio: "assets/audio/ten-bai-hat.mp3"
+audio: "assets/audio/ten-bai-hat.mp3",
+cover: "assets/covers/ten-bai-hat.png"
 ```
 
 Các bài được hiển thị theo thể loại. Muốn thêm Guitar sau này, thêm `{ id: "guitar", label: "Guitar" }` vào `genres` ở đầu `app.js`, rồi gán `genre: "guitar"` cho từng bài Guitar.
+
+Mỗi bài có thể có `cover` trỏ tới ảnh bìa trong `assets/covers/`. Ảnh này sẽ hiện ở thư viện, thanh phát và trang Đang phát.
 
 Xem thêm trong [assets/audio/README.md](./assets/audio/README.md).
 
