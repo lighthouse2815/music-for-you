@@ -1,0 +1,15 @@
+# Generated deployment output and local Cloudflare state
+dist/
+.wrangler/
+
+# Local environment files and editor state
+.dev.vars
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Operating-system files
+Thumbs.db
+.DS_Store

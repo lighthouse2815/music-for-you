@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111113" />
+    <title>Âm Lưu — Nghe theo cách của bạn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <a class="wordmark" href="#home" aria-label="Âm Lưu trang chủ">
+          <span class="wordmark-mark">A</span>
+          <span>Âm Lưu</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Điều hướng chính">
+          <a class="nav-item active" href="#home" data-page="home"><span class="nav-icon">⌂</span>Khám phá</a>
+          <a class="nav-item" href="#library" data-page="library"><span class="nav-icon">◫</span>Thư viện</a>
+          <a class="nav-item" href="#playlists" data-page="playlists"><span class="nav-icon">♬</span>Playlist của tôi</a>
+        </nav>
+
+        <div class="sidebar-playlists">
+          <div class="side-label">PLAYLIST CỦA <span id="side-profile-name">BẠN</span></div>
+          <div id="sidebar-playlist-list" class="sidebar-playlist-list"></div>
+        </div>
+
+        <button id="new-playlist-button" class="new-playlist-button" type="button">
+          <span>＋</span> Tạo playlist
+        </button>
+
+        <button id="profile-button" class="profile-chip" type="button" title="Đổi hồ sơ">
+          <span id="profile-initial" class="profile-avatar">K</span>
+          <span class="profile-name-wrap"><strong id="profile-name">Khách nghe nhạc</strong><small>Lưu trên thiết bị này</small></span>
+          <span class="profile-more">•••</span>
+        </button>
+      </aside>
+
+      <section class="content">
+        <header class="topbar">
+          <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Mở menu">☰</button>
+          <label class="search-box" for="search-input">
+            <span>⌕</span>
+            <input id="search-input" type="search" placeholder="Tìm bài hát, nghệ sĩ..." autocomplete="off" />
+            <kbd>ESC</kbd>
+          </label>
+          <div class="now-chip"><span class="pulse"></span>Nhạc của bạn, ở ngay đây</div>
+        </header>
+
+        <div id="home-page" class="page active-page">
+          <section class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow">CHỌN LẤY MỘT KHOẢNH KHẮC</p>
+              <h1>Âm nhạc <em>đủ gần</em><br />cho riêng bạn.</h1>
+              <p class="hero-description">Một không gian nghe nhạc riêng, không tài khoản, không thông báo. Chỉ còn những giai điệu bạn muốn giữ lại.</p>
+              <div class="hero-actions">
+                <button id="hero-play-button" class="primary-button" type="button"><span>▶</span> Bắt đầu nghe</button>
+                <a href="#library" class="text-button" data-page="library">Xem thư viện <span>↗</span></a>
+              </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+              <div class="sun-disc"></div>
+              <p>VOL. 01<br /><i>một chiều<br />trong veo</i></p>
+              <span class="art-caption">BÌNH YÊN / 26</span>
+            </div>
+          </section>
+
+          <section class="section-block continue-section">
+            <div class="section-heading"><div><p class="eyebrow">DÀNH CHO BẠN</p><h2>Nghe tiếp</h2></div><button class="see-all" type="button" data-page="library">Xem tất cả <span>→</span></button></div>
+            <div id="continue-grid" class="continue-grid"></div>
+          </section>
+
+          <section class="section-block">
+            <div class="section-heading"><div><p class="eyebrow">THƯ VIỆN NỘI BỘ</p><h2>Những bài hát hôm nay</h2></div><span id="track-count" class="count-label"></span></div>
+            <div id="featured-tracks" class="track-list"></div>
+          </section>
+        </div>
+
+        <div id="library-page" class="page">
+          <section class="inner-page-heading">
+            <p class="eyebrow">TOÀN BỘ THƯ VIỆN</p>
+            <h1>Nhạc đang có</h1>
+            <p>File nhạc được phát trực tiếp từ thư mục tĩnh của website.</p>
+          </section>
+          <div id="library-tracks" class="track-list full-track-list"></div>
+        </div>
+
+        <div id="playlists-page" class="page">
+          <section class="inner-page-heading playlists-heading">
+            <div><p class="eyebrow">KHÔNG GIAN CỦA BẠN</p><h1>Playlist của tôi</h1><p>Tạo và sắp xếp các bài hát theo tâm trạng của riêng bạn.</p></div>
+            <button class="primary-button" type="button" data-new-playlist><span>＋</span> Tạo playlist</button>
+          </section>
+          <div id="playlist-grid" class="playlist-grid"></div>
+          <section id="playlist-detail" class="playlist-detail hidden"></section>
+        </div>
+      </section>
+    </main>
+
+    <footer id="player" class="player" aria-label="Trình phát nhạc">
+      <div class="player-track-info">
+        <div id="player-cover" class="mini-cover cover-dawn"><span>01</span></div>
+        <div><strong id="player-title">Chọn một bài hát</strong><span id="player-artist">Thư viện Âm Lưu</span></div>
+        <button id="like-button" class="icon-button like-button" type="button" aria-label="Yêu thích bài hát">♡</button>
+      </div>
+      <div class="player-main">
+        <div class="player-controls">
+          <button id="shuffle-button" class="icon-button" type="button" aria-label="Phát ngẫu nhiên">⤨</button>
+          <button id="previous-button" class="icon-button" type="button" aria-label="Bài trước">◀◀</button>
+          <button id="play-button" class="play-button" type="button" aria-label="Phát">▶</button>
+          <button id="next-button" class="icon-button" type="button" aria-label="Bài tiếp">▶▶</button>
+          <button id="repeat-button" class="icon-button" type="button" aria-label="Lặp lại">↻</button>
+        </div>
+        <div class="progress-row"><time id="elapsed-time">0:00</time><input id="progress-input" type="range" min="0" max="100" value="0" aria-label="Tiến độ bài hát" /><time id="duration-time">0:00</time></div>
+      </div>
+      <div class="player-extra"><button id="mute-button" class="icon-button" type="button" aria-label="Tắt tiếng">◖</button><input id="volume-input" type="range" min="0" max="100" value="70" aria-label="Âm lượng" /><button class="icon-button queue-button" type="button" aria-label="Danh sách chờ">☷</button></div>
+    </footer>
+
+    <dialog id="playlist-dialog" class="dialog">
+      <form id="playlist-form" method="dialog">
+        <button class="close-dialog" type="button" data-close-dialog aria-label="Đóng">×</button>
+        <p class="eyebrow">PLAYLIST MỚI</p><h2>Tạo một góc nghe riêng</h2>
+        <label for="playlist-name-input">Tên playlist</label><input id="playlist-name-input" maxlength="40" placeholder="Ví dụ: Nhạc cho chiều mưa" required />
+        <label for="playlist-description-input">Mô tả <span>(không bắt buộc)</span></label><input id="playlist-description-input" maxlength="80" placeholder="Một vài dòng dành cho nó..." />
+        <button class="primary-button dialog-submit" type="submit">Tạo playlist <span>→</span></button>
+      </form>
+    </dialog>
+
+    <dialog id="profile-dialog" class="dialog profile-dialog">
+      <form id="profile-form" method="dialog">
+        <button class="close-dialog" type="button" data-close-dialog aria-label="Đóng">×</button>
+        <p class="eyebrow">HỒ SƠ TRÊN THIẾT BỊ NÀY</p><h2>Bạn muốn được gọi là gì?</h2>
+        <p class="dialog-copy">Tên này giúp tách playlist của từng người khi dùng chung máy. Dữ liệu không rời khỏi trình duyệt.</p>
+        <label for="profile-name-input">Tên của bạn</label><input id="profile-name-input" maxlength="24" placeholder="Ví dụ: Linh" required />
+        <button class="primary-button dialog-submit" type="submit">Lưu hồ sơ <span>→</span></button>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <audio id="audio-player" preload="metadata"></audio>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "music-for-you",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website nghe nhạc nội bộ, thuần frontend.",
+  "scripts": {
+    "build": "node scripts/build-site.mjs",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name music-for-you --branch main"
+  }
+}
