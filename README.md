@@ -52,12 +52,11 @@ npm run deploy
 
 ## Deploy tự động từ nhánh `main`
 
-Workflow [deploy-cloudflare-pages.yml](./.github/workflows/deploy-cloudflare-pages.yml) đã chạy mỗi khi có push vào `main`. Để kích hoạt workflow trên GitHub, vào **Settings → Secrets and variables → Actions** của repository và thêm hai repository secrets:
+Workflow [deploy-cloudflare-pages.yml](./.github/workflows/deploy-cloudflare-pages.yml) đã chạy mỗi khi có push vào `main`. Để kích hoạt workflow trên GitHub, vào **Settings → Secrets and variables → Actions** của repository và thêm một repository secret:
 
 | Secret | Giá trị |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API token có quyền **Cloudflare Pages: Edit** cho tài khoản đang chứa project. |
-| `CLOUDFLARE_ACCOUNT_ID` | `620f11a12729cd7939cfc0943aac9bf0` |
 
 Sau đó mọi lần push vào `main` sẽ tự build và deploy production lên `https://music-for-you.pages.dev/`.
 

@@ -31,4 +31,4 @@ jobs:
         run: npx --yes wrangler pages deploy dist --project-name music-for-you --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: 620f11a12729cd7939cfc0943aac9bf0
