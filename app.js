@@ -382,6 +382,32 @@ const tracks = [
     genre: "nightcore",
     audio: "assets/audio/alone-pt-ii-nightcore.mp3",
     cover: "assets/covers/alone-pt-ii-nightcore.png"
+  },
+  {
+    id: "miracles-nightcore",
+    title: "Miracles",
+    artist: "Axel Johansson feat. Tina Stachowiak",
+    album: "Miracles",
+    duration: "2:46",
+    seconds: 166,
+    color: "cover-petal",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/miracles-nightcore.mp3",
+    cover: "assets/covers/miracles-nightcore.png"
+  },
+  {
+    id: "the-river-nightcore",
+    title: "The River",
+    artist: "Axel Johansson",
+    album: "The River",
+    duration: "3:04",
+    seconds: 184,
+    color: "cover-river",
+    tag: "NIGHTCORE",
+    genre: "nightcore",
+    audio: "assets/audio/the-river-nightcore.mp3",
+    cover: "assets/covers/the-river-nightcore.png"
   }
 ];
 
