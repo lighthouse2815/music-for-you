@@ -2,6 +2,7 @@ const genres = [
   { id: "piano", label: "Piano" },
   { id: "japanese-music", label: "Nhạc Nhật" },
   { id: "chinese-music", label: "Nhạc Trung" },
+  { id: "western-music", label: "Nhạc Âu Mỹ" },
   { id: "nightcore", label: "Nightcore" }
 ];
 
@@ -408,6 +409,19 @@ const tracks = [
     genre: "nightcore",
     audio: "assets/audio/the-river-nightcore.mp3",
     cover: "assets/covers/the-river-nightcore.png"
+  },
+  {
+    id: "chemical-light",
+    title: "Chemical Light",
+    artist: "Josie Edwards",
+    album: "Chemical Light",
+    duration: "3:46",
+    seconds: 226,
+    color: "cover-shadow",
+    tag: "POP",
+    genre: "western-music",
+    audio: "assets/audio/chemical-light.mp3",
+    cover: "assets/covers/chemical-light.png"
   }
 ];
 
