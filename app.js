@@ -415,13 +415,24 @@ const state = { currentId: null, isPlaying: false, repeat: false, shuffle: false
 const $ = (selector, parent = document) => parent.querySelector(selector);
 const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
 const audio = $("#audio-player");
+const progressUi = {
+  elapsed: $("#elapsed-time"),
+  duration: $("#duration-time"),
+  progress: $("#progress-input"),
+  pageElapsed: $("#page-elapsed-time"),
+  pageDuration: $("#page-duration-time"),
+  pageProgress: $("#page-progress-input")
+};
 const storeKey = "am-luu-v1";
 const fallingNotesKey = "am-luu-falling-notes-v1";
-let fallingNotesEnabled = localStorage.getItem(fallingNotesKey) !== "off";
+const savedFallingNotesPreference = localStorage.getItem(fallingNotesKey);
+let fallingNotesEnabled = savedFallingNotesPreference ? savedFallingNotesPreference === "on" : !useLowPowerVisualizer();
 let audioContext;
 let audioAnalyser;
 let audioFrequencyData;
 let visualizerFrame;
+let renderedTrackItems = tracks;
+let renderedTrackSearch = false;
 
 function loadState() {
   try {
@@ -449,6 +460,8 @@ function saveState() {
 function getTrack(id) { return tracks.find(track => track.id === id); }
 function displayName() { return state.profile; }
 function formatTime(value) { if (!Number.isFinite(value)) return "0:00"; const minutes = Math.floor(value / 60); const seconds = Math.floor(value % 60).toString().padStart(2, "0"); return `${minutes}:${seconds}`; }
+function useLowPowerVisualizer() { return window.matchMedia("(max-width: 800px), (prefers-reduced-motion: reduce)").matches; }
+function canAnimateVisualizer() { return !useLowPowerVisualizer() && !document.hidden && $("#player-page").classList.contains("active-page"); }
 
 function resetAudioVisualizer() {
   if (visualizerFrame) cancelAnimationFrame(visualizerFrame);
@@ -467,6 +480,7 @@ function resetAudioVisualizer() {
 }
 
 function prepareAudioVisualizer() {
+  if (!canAnimateVisualizer()) return false;
   if (audioAnalyser) {
     if (audioContext?.state === "suspended") audioContext.resume().catch(() => {});
     return true;
@@ -477,7 +491,7 @@ function prepareAudioVisualizer() {
     audioContext = new AudioContextClass();
     const source = audioContext.createMediaElementSource(audio);
     audioAnalyser = audioContext.createAnalyser();
-    audioAnalyser.fftSize = 128;
+    audioAnalyser.fftSize = useLowPowerVisualizer() ? 64 : 128;
     audioAnalyser.smoothingTimeConstant = .82;
     source.connect(audioAnalyser);
     audioAnalyser.connect(audioContext.destination);
@@ -491,14 +505,20 @@ function prepareAudioVisualizer() {
 }
 
 function startAudioVisualizer() {
+  if (!canAnimateVisualizer()) { resetAudioVisualizer(); return; }
   if (!prepareAudioVisualizer()) return;
   if (visualizerFrame) cancelAnimationFrame(visualizerFrame);
   const visualizer = $("#audio-visualizer");
-  const bars = $$("span", visualizer);
+  const lowPowerMode = useLowPowerVisualizer();
+  const bars = $$("span", visualizer).filter((_, index) => !lowPowerMode || index % 2 === 0);
+  const frameInterval = lowPowerMode ? 66 : 0;
+  let lastPaintTime = 0;
   const playerPage = $("#player-page");
   visualizer.classList.add("is-active");
-  const paint = () => {
+  const paint = timestamp => {
     if (audio.paused || audio.ended || !audioAnalyser) { resetAudioVisualizer(); return; }
+    if (timestamp - lastPaintTime < frameInterval) { visualizerFrame = requestAnimationFrame(paint); return; }
+    lastPaintTime = timestamp;
     audioAnalyser.getByteFrequencyData(audioFrequencyData);
     const spectrumLength = Math.max(1, Math.floor(audioFrequencyData.length * .72));
     let totalEnergy = 0;
@@ -519,7 +539,7 @@ function startAudioVisualizer() {
     playerPage.style.setProperty("--record-glow", `${Math.round(2 + averageEnergy * 16)}px`);
     visualizerFrame = requestAnimationFrame(paint);
   };
-  paint();
+  paint(performance.now());
 }
 
 function showToast(message) { const toast = $("#toast"); toast.textContent = message; toast.classList.add("visible"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("visible"), 2600); }
@@ -538,7 +558,8 @@ function toggleFallingNotes() {
   updateFallingNotesUi();
 }
 
-function coverMarkup(track, fallback) { return track.cover ? `<img src="${track.cover}" alt="Bìa album của ${track.title}" />` : fallback; }
+function optimizedCoverPath(cover) { return cover ? cover.replace(/\.png$/i, ".webp") : ""; }
+function coverMarkup(track, fallback) { const cover = optimizedCoverPath(track.cover); return cover ? `<img src="${cover}" alt="Bìa album của ${track.title}" loading="lazy" decoding="async" />` : fallback; }
 function trackRow(track, index, options = {}) {
   const current = track.id === state.currentId ? " current-track" : "";
   const remove = options.remove ? `<button class="subtle-button remove-from-playlist" data-track-id="${track.id}" data-playlist-id="${options.playlistId}" type="button">Bỏ khỏi playlist</button>` : "";
@@ -559,15 +580,24 @@ function genreGroups(items) {
 function genreGroup(genre, items) {
   const genreTracks = tracksForGenre(genre, items);
   const rows = genreTracks.length ? genreTracks.map((track, index) => trackRow(track, index)).join("") : `<p class="empty-state">Chưa có bài hát thuộc thể loại ${genre.label}.</p>`;
-  return `<section class="genre-group"><div class="genre-heading"><h3>${genre.label}</h3><span class="count-label">${genreTracks.length} BÀI HÁT</span></div><div class="track-list">${rows}</div></section>`;
+  const intrinsicHeight = 66 + Math.max(1, genreTracks.length) * 65;
+  return `<section class="genre-group" style="contain-intrinsic-block-size:${intrinsicHeight}px"><div class="genre-heading"><h3>${genre.label}</h3><span class="count-label">${genreTracks.length} BÀI HÁT</span></div><div class="track-list">${rows}</div></section>`;
+}
+function trackListMarkup(items = tracks, isSearching = false) { return isSearching && !items.length ? emptyTracksMessage() : genreGroups(items).map(genre => genreGroup(genre, items)).join(""); }
+function renderActiveTrackList() {
+  const html = trackListMarkup(renderedTrackItems, renderedTrackSearch);
+  const homeTarget = $("#featured-tracks");
+  const libraryTarget = $("#library-tracks");
+  const homeIsActive = $("#home-page").classList.contains("active-page");
+  const libraryIsActive = $("#library-page").classList.contains("active-page");
+  homeTarget.innerHTML = homeIsActive ? html : "";
+  libraryTarget.innerHTML = libraryIsActive ? html : "";
 }
 function renderTracks(items = tracks, isSearching = false) {
-  const html = isSearching && !items.length ? emptyTracksMessage() : genreGroups(items).map(genre => genreGroup(genre, items)).join("");
-  $("#featured-tracks").innerHTML = html;
-  $("#library-tracks").innerHTML = html;
+  renderedTrackItems = items;
+  renderedTrackSearch = isSearching;
+  renderActiveTrackList();
   $("#track-count").textContent = tracks.length ? `${tracks.length} BÀI HÁT` : "CHƯA CÓ BÀI HÁT";
-  $$(".track-row").forEach(row => row.addEventListener("click", event => { if (event.target.closest("button")) return; playTrack(row.dataset.trackId); }));
-  $$("[data-menu-track]").forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openTrackMenu(button); }));
 }
 function renderSidebar() {
   const target = $("#sidebar-playlist-list");
@@ -598,20 +628,18 @@ function renderPlaylistDetail() {
   target.classList.remove("hidden");
   target.innerHTML = `<div class="playlist-detail-title"><div><p class="eyebrow">PLAYLIST ĐANG MỞ</p><h2>${playlist.name}</h2></div><button class="subtle-button" type="button" data-close-playlist>Đóng chi tiết</button></div><div class="track-list">${playlistTracks.length ? playlistTracks.map((track, index) => trackRow(track, index, { remove: true, playlistId: playlist.id })).join("") : `<p class="empty-state">Playlist này còn trống. Dùng dấu ••• bên cạnh bài hát để thêm nhạc.</p>`}</div>`;
   $$('[data-close-playlist]', target).forEach(button => button.addEventListener("click", () => { state.activePlaylistId = null; renderPlaylistDetail(); }));
-  $$(".track-row", target).forEach(row => row.addEventListener("click", event => { if (event.target.closest("button")) return; playTrack(row.dataset.trackId); }));
-  $$('[data-menu-track]', target).forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openTrackMenu(button); }));
   $$(".remove-from-playlist", target).forEach(button => button.addEventListener("click", () => removeTrackFromPlaylist(button.dataset.playlistId, button.dataset.trackId)));
 }
 function renderAll() { renderTracks(); renderSidebar(); renderPlaylists(); renderPlaylistDetail(); setProfileUi(); updatePlayerUi(); }
 
 function syncProgressUi() {
   const progress = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
-  $("#elapsed-time").textContent = formatTime(audio.currentTime);
-  $("#duration-time").textContent = formatTime(audio.duration);
-  $("#progress-input").value = progress;
-  $("#page-elapsed-time").textContent = formatTime(audio.currentTime);
-  $("#page-duration-time").textContent = formatTime(audio.duration);
-  $("#page-progress-input").value = progress;
+  progressUi.elapsed.textContent = formatTime(audio.currentTime);
+  progressUi.duration.textContent = formatTime(audio.duration);
+  progressUi.progress.value = progress;
+  progressUi.pageElapsed.textContent = formatTime(audio.currentTime);
+  progressUi.pageDuration.textContent = formatTime(audio.duration);
+  progressUi.pageProgress.value = progress;
 }
 
 function updatePlayerUi() {
@@ -639,14 +667,15 @@ function updatePlayerUi() {
     $("#page-player-title").textContent = pageTrack.title;
     $("#page-player-artist").textContent = pageTrack.artist;
     $("#page-player-album").textContent = pageTrack.album;
-    $("#page-player-cover").src = pageTrack.cover || "";
-    $("#page-player-cover").alt = pageTrack.cover ? `Bìa album của ${pageTrack.title}` : "";
+    const pageCover = optimizedCoverPath(pageTrack.cover);
+    $("#page-player-cover").src = pageCover;
+    $("#page-player-cover").alt = pageCover ? `Bìa album của ${pageTrack.title}` : "";
     $("#page-player-genre").textContent = pageGenre.toUpperCase();
     $("#page-player-index").textContent = String(pageTrackIndex + 1).padStart(2, "0");
     $("#page-player-tag").textContent = pageTrack.tag;
     $("#page-player-position").textContent = `${String(pageTrackIndex + 1).padStart(2, "0")} / ${String(tracks.length).padStart(2, "0")}`;
     $("#page-player-quote").textContent = `“ ${pageTrack.title} — ${pageTrack.artist} ”`;
-    $("#player-page").style.setProperty("--page-cover", pageTrack.cover ? `url("${pageTrack.cover}")` : "none");
+    $("#player-page").style.setProperty("--page-cover", pageCover ? `url("${pageCover}")` : "none");
   }
   $("#player-page").classList.toggle("is-playing", !!track && state.isPlaying);
   $("#page-player-status").textContent = track && state.isPlaying ? "ĐANG PHÁT" : "SẴN SÀNG PHÁT";
@@ -690,7 +719,15 @@ function openPlayerPage() {
   showPage("player");
   updatePlayerUi();
 }
-function showPage(page) { $$(".page").forEach(item => item.classList.toggle("active-page", item.id === `${page}-page`)); $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page)); document.body.classList.toggle("player-mode", page === "player"); $(".sidebar").classList.remove("open"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+function showPage(page) {
+  $$(".page").forEach(item => item.classList.toggle("active-page", item.id === `${page}-page`));
+  $$(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.page === page));
+  document.body.classList.toggle("player-mode", page === "player");
+  if (page === "home" || page === "library") renderActiveTrackList();
+  if (page === "player" && !audio.paused) startAudioVisualizer(); else resetAudioVisualizer();
+  $(".sidebar").classList.remove("open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function registerEvents() {
   $("#hero-play-button").addEventListener("click", playFirstTrack);
@@ -707,15 +744,31 @@ function registerEvents() {
   audio.addEventListener("loadedmetadata", syncProgressUi);
   audio.addEventListener("timeupdate", syncProgressUi);
   audio.addEventListener("play", () => { state.isPlaying = true; startAudioVisualizer(); updatePlayerUi(); }); audio.addEventListener("pause", () => { state.isPlaying = false; resetAudioVisualizer(); updatePlayerUi(); }); audio.addEventListener("ended", () => { if (!state.repeat) moveTrack(1); });
-  $("#search-input").addEventListener("input", event => { const query = event.target.value.trim().toLowerCase(); const found = tracks.filter(track => `${track.title} ${track.artist} ${track.album} ${track.genre}`.toLowerCase().includes(query)); renderTracks(found, Boolean(query)); });
-  document.addEventListener("keydown", event => { if (event.key === "Escape") { $("#search-input").value = ""; $("#search-input").blur(); $$(".track-menu-popover").forEach(menu => menu.remove()); } });
+  let searchRenderTimer;
+  $("#search-input").addEventListener("input", event => {
+    const query = event.target.value.trim().toLowerCase();
+    window.clearTimeout(searchRenderTimer);
+    searchRenderTimer = window.setTimeout(() => {
+      const found = tracks.filter(track => `${track.title} ${track.artist} ${track.album} ${track.genre}`.toLowerCase().includes(query));
+      renderTracks(found, Boolean(query));
+    }, 120);
+  });
+  document.addEventListener("keydown", event => { if (event.key === "Escape") { window.clearTimeout(searchRenderTimer); $("#search-input").value = ""; $("#search-input").blur(); renderTracks(); $$(".track-menu-popover").forEach(menu => menu.remove()); } });
   $$("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); link.dataset.page === "player" ? openPlayerPage() : showPage(link.dataset.page); }));
   $("#new-playlist-button").addEventListener("click", openPlaylistDialog); $("#profile-button").addEventListener("click", () => { $("#profile-name-input").value = state.profile || ""; $("#profile-dialog").showModal(); }); $("#mobile-menu-button").addEventListener("click", () => $(".sidebar").classList.toggle("open")); $("#open-player-page").addEventListener("click", openPlayerPage);
   $("#falling-notes-toggle").addEventListener("click", toggleFallingNotes);
   $("#playlist-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#playlist-name-input").value.trim(); if (!name) return; const playlist = { id: crypto.randomUUID(), name, description: $("#playlist-description-input").value.trim(), trackIds: [] }; state.playlists.unshift(playlist); const pending = $("#playlist-dialog").dataset.pendingTrack; if (pending) { playlist.trackIds.push(pending); delete $("#playlist-dialog").dataset.pendingTrack; } saveState(); $("#playlist-dialog").close(); renderSidebar(); renderPlaylists(); showToast(pending ? `Đã tạo “${name}” và thêm bài hát.` : `Đã tạo playlist “${name}”.`); });
   $("#profile-form").addEventListener("submit", event => { event.preventDefault(); const name = $("#profile-name-input").value.trim(); if (!name) return; saveState(); state.profile = name; loadProfileData(); saveState(); $("#profile-dialog").close(); renderAll(); showToast(`Đang dùng hồ sơ ${name}. Playlist được lưu riêng trên thiết bị này.`); });
   $$('[data-close-dialog]').forEach(button => button.addEventListener("click", () => { const dialog = button.closest("dialog"); if (dialog.id === "playlist-dialog") delete dialog.dataset.pendingTrack; dialog.close(); }));
-  document.addEventListener("click", event => { if (!event.target.closest(".track-menu")) $$(".track-menu-popover").forEach(menu => menu.remove()); if (event.target.closest("[data-new-playlist]")) openPlaylistDialog(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) resetAudioVisualizer(); else if (!audio.paused) startAudioVisualizer(); });
+  document.addEventListener("click", event => {
+    const menuButton = event.target.closest("[data-menu-track]");
+    if (menuButton) { event.stopPropagation(); openTrackMenu(menuButton); return; }
+    const trackRowElement = event.target.closest(".track-row");
+    if (trackRowElement && !event.target.closest("button")) { playTrack(trackRowElement.dataset.trackId); return; }
+    if (!event.target.closest(".track-menu")) $$(".track-menu-popover").forEach(menu => menu.remove());
+    if (event.target.closest("[data-new-playlist]")) openPlaylistDialog();
+  });
 }
 
 loadState(); renderAll(); updateFallingNotesUi(); registerEvents();
