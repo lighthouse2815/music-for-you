@@ -573,7 +573,11 @@ function toggleFallingNotes() {
 }
 
 function optimizedCoverPath(cover) { return cover ? cover.replace(/\.png$/i, ".webp") : ""; }
-function coverMarkup(track, fallback) { const cover = optimizedCoverPath(track.cover); return cover ? `<img src="${cover}" alt="Bìa album của ${track.title}" loading="lazy" decoding="async" />` : fallback; }
+function coverMarkup(track, fallback) {
+  const cover = optimizedCoverPath(track.cover);
+  const fallbackCover = track.cover || "";
+  return cover ? `<img src="${cover}" data-cover-fallback="${fallbackCover}" alt="Bìa album của ${track.title}" loading="lazy" decoding="async" />` : fallback;
+}
 function trackRow(track, index, options = {}) {
   const current = track.id === state.currentId ? " current-track" : "";
   const remove = options.remove ? `<button class="subtle-button remove-from-playlist" data-track-id="${track.id}" data-playlist-id="${options.playlistId}" type="button">Bỏ khỏi playlist</button>` : "";
@@ -682,7 +686,10 @@ function updatePlayerUi() {
     $("#page-player-artist").textContent = pageTrack.artist;
     $("#page-player-album").textContent = pageTrack.album;
     const pageCover = optimizedCoverPath(pageTrack.cover);
-    $("#page-player-cover").src = pageCover;
+    const pageCoverImage = $("#page-player-cover");
+    pageCoverImage.dataset.coverFallback = pageTrack.cover || "";
+    delete pageCoverImage.dataset.fallbackApplied;
+    pageCoverImage.src = pageCover;
     $("#page-player-cover").alt = pageCover ? `Bìa album của ${pageTrack.title}` : "";
     $("#page-player-genre").textContent = pageGenre.toUpperCase();
     $("#page-player-index").textContent = String(pageTrackIndex + 1).padStart(2, "0");
@@ -744,6 +751,12 @@ function showPage(page) {
 }
 
 function registerEvents() {
+  document.addEventListener("error", event => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied || !image.dataset.coverFallback) return;
+    image.dataset.fallbackApplied = "true";
+    image.src = image.dataset.coverFallback;
+  }, true);
   $("#hero-play-button").addEventListener("click", playFirstTrack);
   $("#play-button").addEventListener("click", togglePlayback); $("#previous-button").addEventListener("click", () => moveTrack(-1)); $("#next-button").addEventListener("click", () => moveTrack(1));
   $("#page-play-button").addEventListener("click", togglePlayback); $("#page-previous-button").addEventListener("click", () => moveTrack(-1)); $("#page-next-button").addEventListener("click", () => moveTrack(1));
